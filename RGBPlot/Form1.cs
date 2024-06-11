@@ -31,6 +31,7 @@ namespace RGBPlot {
         Point start, end;
         public Bitmap bitmap, linedBitmap ;
         (Point pos, Color color)[] colorData = new (Point pos, Color color)[100];
+        double scale;
         float ImageScale => (float)WidthBox.Value / (float)bitmap.Width;
         bool IsPointSetted(bool outputLog = true) {
                 if(start != end && bitmap != null) return true;
@@ -119,8 +120,12 @@ namespace RGBPlot {
             }
             PictureBox.Image = linedBitmap;
             if(DistanceTypeSelecter.SelectedIndex == 1) {
-                DistanceBox.Value = (int)(new Vector2(xLen, yLen).Length() * ImageScale);
+                DistanceBox.Value = (int)(GetDistance() * ImageScale);
             }
+        }
+
+        float GetDistance() {
+            return new Vector2(end.X - start.X, end.Y - start.Y).Length();
         }
 
         private void ChosePictureBtn_Click(object sender, EventArgs e) {
@@ -146,8 +151,8 @@ namespace RGBPlot {
                 this.filePath.Text = filePath;
                 double scale_x = (double)bmp.Width / (double)PictureBox.Width;
                 double scale_y = (double)bmp.Height / (double)PictureBox.Height;
-                double scale = (scale_x > scale_y) ? scale_x : scale_y;
-
+                scale = (scale_x > scale_y) ? scale_x : scale_y;
+                Label_Scale.Text = scale.ToString("f2") +"倍";
                 bitmap = new Bitmap(bmp, (int)(bmp.Width / scale), (int)(bmp.Height / scale));
                 bmp.Dispose();
                 fs.Dispose();
@@ -209,7 +214,11 @@ namespace RGBPlot {
                     DrawLine();
                 } else DistanceBox.Value = 0;
                 DistanceBox.Enabled = false;
-            }else DistanceBox.Enabled = true;
+                SetWidthBtn.Enabled = false;
+            } else {
+                DistanceBox.Enabled = true;
+                SetWidthBtn.Enabled = true;
+            }
         }
 
         private void Form1_DragDrop(object sender, DragEventArgs e) {
@@ -229,6 +238,12 @@ namespace RGBPlot {
             }
         }
 
+        private void SetWidthBtn_Click(object sender, EventArgs e) {
+            if (!IsPointSetted() || DistanceBox.Value <= 0) return;
+            var width =  bitmap.Width * (int)DistanceBox.Value / GetDistance();
+            WidthBox.Value = (int)width;
+        }
+
         private void DrawChartBtn_Click(object sender, EventArgs e) {
             if (!IsPointSetted()) return;
             DrawChart();
@@ -240,7 +255,6 @@ namespace RGBPlot {
             Worksheet sheet = wb.Worksheets[0];
             sheet.Cells["A1"].PutValue("X");
             sheet.Cells["B1"].PutValue("Y");
-            sheet.Cells["C1"].PutValue("始点からの距離");
             sheet.Cells["D1"].PutValue("Color");
             sheet.Cells["E1"].PutValue("R");
             sheet.Cells["F1"].PutValue("G");
@@ -250,13 +264,10 @@ namespace RGBPlot {
             sheet.Cells["J1"].PutValue("V(明度)");
             for (int i = 0; i < colorData.Length; i++){
                 string index = (i + 2).ToString();
-                var pos = colorData[i].pos;
+                var pos = (colorData[i].pos.ToVector() - colorData[0].pos.ToVector()) * ImageScale;
                 var c = colorData[i].color;
                 sheet.Cells["A" + index].PutValue(pos.X);
                 sheet.Cells["B" + index].PutValue(pos.Y);
-                if(DistanceBox.Value > 0) {
-                    
-                }
                 sheet.Cells["E" + index].PutValue(c.R);
                 sheet.Cells["F" + index].PutValue(c.G);
                 sheet.Cells["G" + index].PutValue(c.B);
