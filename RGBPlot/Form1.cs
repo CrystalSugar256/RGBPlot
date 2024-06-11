@@ -21,16 +21,22 @@ namespace RGBPlot {
         
         public Form1() {
             InitializeComponent();
-            SetStartPoint(default);
-            SetEndPoint(default);
+            DistanceTypeSelecter.SelectedIndex = 0;
+            InitPoints();
             Log("Initilaize completed");
         }
 
         void Log(string message) => Label_log.Text = message;
 
         Point start, end;
-        public Bitmap bitmap, linedBitmap;
-        (Point pos, Color color)[] colorData = new (Point pos, Color color)[100]; 
+        public Bitmap bitmap, linedBitmap ;
+        (Point pos, Color color)[] colorData = new (Point pos, Color color)[100];
+        float ImageScale => (float)WidthBox.Value / (float)bitmap.Width;
+        bool IsPointSetted(bool outputLog = true) {
+                if(start != end && bitmap != null) return true;
+                if(outputLog)Log("Import Image and Set Ponts");
+                return false;
+        }
 
         private void DrawChart() {
             Log("Chart Drawing Started");
@@ -98,8 +104,10 @@ namespace RGBPlot {
 
         void DrawLine() {
             GetCopiedBitmap();
-            float stepX = (end.X - start.X) / (float)colorData.Length,
-                stepY = (end.Y - start.Y) / (float)colorData.Length;
+            int xLen = end.X - start.X,
+                yLen = end.Y - start.Y;
+            float stepX = xLen / (float)colorData.Length,
+                stepY = yLen / (float)colorData.Length;
             for (int i = 0; i < colorData.Length; i++) {
                 var point = new Point((int)(start.X + i * stepX), (int)(start.Y + i * stepY));
                 colorData[i] = (point, bitmap.GetPixel(point.X ,point.Y));
@@ -110,6 +118,9 @@ namespace RGBPlot {
                 }
             }
             PictureBox.Image = linedBitmap;
+            if(DistanceTypeSelecter.SelectedIndex == 1) {
+                DistanceBox.Value = (int)(new Vector2(xLen, yLen).Length() * ImageScale);
+            }
         }
 
         private void ChosePictureBtn_Click(object sender, EventArgs e) {
@@ -121,25 +132,37 @@ namespace RGBPlot {
                 openFileDialog.RestoreDirectory = true;
 
                 if (openFileDialog.ShowDialog() == DialogResult.OK) {
-                    var filePath = openFileDialog.FileName;
-                    bitmap?.Dispose();
-                    using (var fs = new FileStream(filePath,
-                             FileMode.Open,
-                             FileAccess.Read)) {
-                        var bmp = new Bitmap(fs);
-                        this.filePath.Text = filePath;
-                        double scale_x = (double)bmp.Width / (double)PictureBox.Width;
-                        double scale_y = (double)bmp.Height / (double)PictureBox.Height;
-                        double scale = (scale_x > scale_y) ? scale_x : scale_y;
-
-                        bitmap = new Bitmap(bmp, (int)(bmp.Width / scale), (int)(bmp.Height / scale));
-                        bmp.Dispose();
-                        fs.Dispose();
-                        GetCopiedBitmap();
-                        PictureBox.Image = linedBitmap;
-                        Log("Image File Opened");
-                    }
+                    ImportImage(openFileDialog.FileName);
                 }else Log("Canceled FileDialog");
+            }
+        }
+
+        void ImportImage(string filePath) {
+            bitmap?.Dispose();
+            using (var fs = new FileStream(filePath,
+                     FileMode.Open,
+                     FileAccess.Read)) {
+                var bmp = new Bitmap(fs);
+                this.filePath.Text = filePath;
+                double scale_x = (double)bmp.Width / (double)PictureBox.Width;
+                double scale_y = (double)bmp.Height / (double)PictureBox.Height;
+                double scale = (scale_x > scale_y) ? scale_x : scale_y;
+
+                bitmap = new Bitmap(bmp, (int)(bmp.Width / scale), (int)(bmp.Height / scale));
+                bmp.Dispose();
+                fs.Dispose();
+                GetCopiedBitmap();
+                PictureBox.Image = linedBitmap;
+                InitPoints();
+                Log("Image File Opened");
+            }
+        }
+
+        void InitPoints() {
+            SetStartPoint(default);
+            SetEndPoint(default);
+            if(DistanceTypeSelecter.SelectedIndex == 1) {
+                DistanceBox.Value = 0;
             }
         }
 
@@ -176,12 +199,38 @@ namespace RGBPlot {
         }
 
         private void SaveExcelFile_Click(object sender, EventArgs e) {
-            if (bitmap == null) return;
+            if (!IsPointSetted()) return;
             SaveToExcel();
         }
 
+        private void DistanceTypeSelecter_SelectedIndexChanged(object sender, EventArgs e) {
+            if (DistanceTypeSelecter.SelectedIndex == 1) {
+                if (IsPointSetted(false)) {
+                    DrawLine();
+                } else DistanceBox.Value = 0;
+                DistanceBox.Enabled = false;
+            }else DistanceBox.Enabled = true;
+        }
+
+        private void Form1_DragDrop(object sender, DragEventArgs e) {
+            string[] files = (string[])e.Data.GetData(DataFormats.FileDrop, false);
+            if (files[0].EndsWith(".png") || files[0].EndsWith(".jpg")) {
+                ImportImage(files[0]);
+            } else {
+                Log("jpg か png のみ受け付けます");
+            }
+        }
+
+        private void Form1_DragEnter(object sender, DragEventArgs e) {
+            if (e.Data.GetDataPresent(DataFormats.FileDrop)) {
+                e.Effect = DragDropEffects.All;
+            } else {
+                e.Effect = DragDropEffects.None;
+            }
+        }
+
         private void DrawChartBtn_Click(object sender, EventArgs e) {
-            if (bitmap == null) return;
+            if (!IsPointSetted()) return;
             DrawChart();
         }
 
@@ -191,19 +240,29 @@ namespace RGBPlot {
             Worksheet sheet = wb.Worksheets[0];
             sheet.Cells["A1"].PutValue("X");
             sheet.Cells["B1"].PutValue("Y");
-            sheet.Cells["C1"].PutValue("Color");
-            sheet.Cells["D1"].PutValue("R");
-            sheet.Cells["E1"].PutValue("G");
-            sheet.Cells["F1"].PutValue("B");
+            sheet.Cells["C1"].PutValue("始点からの距離");
+            sheet.Cells["D1"].PutValue("Color");
+            sheet.Cells["E1"].PutValue("R");
+            sheet.Cells["F1"].PutValue("G");
+            sheet.Cells["G1"].PutValue("B");
+            sheet.Cells["H1"].PutValue("H(色相)");
+            sheet.Cells["I1"].PutValue("S(彩度)");
+            sheet.Cells["J1"].PutValue("V(明度)");
             for (int i = 0; i < colorData.Length; i++){
                 string index = (i + 2).ToString();
                 var pos = colorData[i].pos;
                 var c = colorData[i].color;
                 sheet.Cells["A" + index].PutValue(pos.X);
                 sheet.Cells["B" + index].PutValue(pos.Y);
-                sheet.Cells["D" + index].PutValue(c.R);
-                sheet.Cells["E" + index].PutValue(c.G);
-                sheet.Cells["F" + index].PutValue(c.B);
+                if(DistanceBox.Value > 0) {
+                    
+                }
+                sheet.Cells["E" + index].PutValue(c.R);
+                sheet.Cells["F" + index].PutValue(c.G);
+                sheet.Cells["G" + index].PutValue(c.B);
+                sheet.Cells["H" + index].PutValue(c.GetHue());
+                sheet.Cells["I" + index].PutValue(c.GetSaturation());
+                sheet.Cells["J" + index].PutValue(c.GetBrightness());
             }
             wb.Save("ColorData.xlsx", SaveFormat.Xlsx);
             Log("Creating Xlsx Completed");

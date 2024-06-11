@@ -39,9 +39,16 @@
             this.Lable_Partition = new System.Windows.Forms.Label();
             this.SaveExcelFile = new System.Windows.Forms.Button();
             this.Label_log = new System.Windows.Forms.Label();
+            this.Label_distance = new System.Windows.Forms.Label();
+            this.DistanceBox = new System.Windows.Forms.NumericUpDown();
+            this.DistanceTypeSelecter = new System.Windows.Forms.ListBox();
+            this.WidthBox = new System.Windows.Forms.NumericUpDown();
+            this.Label_imageSize = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.ChartBox)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.PictureBox)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.PartitionCountBox)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.DistanceBox)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.WidthBox)).BeginInit();
             this.SuspendLayout();
             // 
             // ChartBox
@@ -51,6 +58,7 @@
             legend2.Name = "Legend1";
             this.ChartBox.Legends.Add(legend2);
             this.ChartBox.Location = new System.Drawing.Point(524, 12);
+            this.ChartBox.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.ChartBox.Name = "ChartBox";
             series2.ChartArea = "ChartArea1";
             series2.Legend = "Legend1";
@@ -63,6 +71,7 @@
             // PictureBox
             // 
             this.PictureBox.Location = new System.Drawing.Point(12, 12);
+            this.PictureBox.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.PictureBox.Name = "PictureBox";
             this.PictureBox.Size = new System.Drawing.Size(471, 300);
             this.PictureBox.TabIndex = 1;
@@ -72,8 +81,9 @@
             // ChosePictureBtn
             // 
             this.ChosePictureBtn.Location = new System.Drawing.Point(12, 341);
+            this.ChosePictureBtn.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.ChosePictureBtn.Name = "ChosePictureBtn";
-            this.ChosePictureBtn.Size = new System.Drawing.Size(133, 48);
+            this.ChosePictureBtn.Size = new System.Drawing.Size(123, 48);
             this.ChosePictureBtn.TabIndex = 2;
             this.ChosePictureBtn.Text = "ChosePicture";
             this.ChosePictureBtn.UseVisualStyleBackColor = true;
@@ -82,6 +92,7 @@
             // SetStartBtn
             // 
             this.SetStartBtn.Location = new System.Drawing.Point(247, 341);
+            this.SetStartBtn.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.SetStartBtn.Name = "SetStartBtn";
             this.SetStartBtn.Size = new System.Drawing.Size(81, 48);
             this.SetStartBtn.TabIndex = 3;
@@ -91,7 +102,8 @@
             // 
             // SetEndBtn
             // 
-            this.SetEndBtn.Location = new System.Drawing.Point(402, 341);
+            this.SetEndBtn.Location = new System.Drawing.Point(403, 341);
+            this.SetEndBtn.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.SetEndBtn.Name = "SetEndBtn";
             this.SetEndBtn.Size = new System.Drawing.Size(81, 48);
             this.SetEndBtn.TabIndex = 4;
@@ -129,6 +141,7 @@
             // DrawChartBtn
             // 
             this.DrawChartBtn.Location = new System.Drawing.Point(524, 341);
+            this.DrawChartBtn.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.DrawChartBtn.Name = "DrawChartBtn";
             this.DrawChartBtn.Size = new System.Drawing.Size(129, 48);
             this.DrawChartBtn.TabIndex = 9;
@@ -138,7 +151,8 @@
             // 
             // PartitionCountBox
             // 
-            this.PartitionCountBox.Location = new System.Drawing.Point(682, 366);
+            this.PartitionCountBox.Location = new System.Drawing.Point(683, 366);
+            this.PartitionCountBox.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.PartitionCountBox.Name = "PartitionCountBox";
             this.PartitionCountBox.Size = new System.Drawing.Size(120, 22);
             this.PartitionCountBox.TabIndex = 10;
@@ -161,8 +175,9 @@
             // SaveExcelFile
             // 
             this.SaveExcelFile.Location = new System.Drawing.Point(831, 341);
+            this.SaveExcelFile.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.SaveExcelFile.Name = "SaveExcelFile";
-            this.SaveExcelFile.Size = new System.Drawing.Size(107, 47);
+            this.SaveExcelFile.Size = new System.Drawing.Size(107, 48);
             this.SaveExcelFile.TabIndex = 12;
             this.SaveExcelFile.Text = "SaveAs Xlsx";
             this.SaveExcelFile.UseVisualStyleBackColor = true;
@@ -171,17 +186,81 @@
             // Label_log
             // 
             this.Label_log.AutoSize = true;
-            this.Label_log.Location = new System.Drawing.Point(15, 417);
+            this.Label_log.Location = new System.Drawing.Point(12, 430);
             this.Label_log.Name = "Label_log";
             this.Label_log.Size = new System.Drawing.Size(43, 15);
             this.Label_log.TabIndex = 13;
             this.Label_log.Text = "label1";
             // 
+            // Label_distance
+            // 
+            this.Label_distance.AutoSize = true;
+            this.Label_distance.Location = new System.Drawing.Point(247, 422);
+            this.Label_distance.Name = "Label_distance";
+            this.Label_distance.Size = new System.Drawing.Size(77, 15);
+            this.Label_distance.TabIndex = 15;
+            this.Label_distance.Text = "２点間距離";
+            // 
+            // DistanceBox
+            // 
+            this.DistanceBox.Location = new System.Drawing.Point(331, 422);
+            this.DistanceBox.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
+            this.DistanceBox.Maximum = new decimal(new int[] {
+            200000,
+            0,
+            0,
+            0});
+            this.DistanceBox.Name = "DistanceBox";
+            this.DistanceBox.Size = new System.Drawing.Size(120, 22);
+            this.DistanceBox.TabIndex = 16;
+            // 
+            // DistanceTypeSelecter
+            // 
+            this.DistanceTypeSelecter.FormattingEnabled = true;
+            this.DistanceTypeSelecter.ItemHeight = 15;
+            this.DistanceTypeSelecter.Items.AddRange(new object[] {
+            "指定",
+            "オート(要画像寸法)"});
+            this.DistanceTypeSelecter.Location = new System.Drawing.Point(331, 452);
+            this.DistanceTypeSelecter.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
+            this.DistanceTypeSelecter.Name = "DistanceTypeSelecter";
+            this.DistanceTypeSelecter.Size = new System.Drawing.Size(129, 34);
+            this.DistanceTypeSelecter.TabIndex = 17;
+            this.DistanceTypeSelecter.SelectedIndexChanged += new System.EventHandler(this.DistanceTypeSelecter_SelectedIndexChanged);
+            // 
+            // WidthBox
+            // 
+            this.WidthBox.Location = new System.Drawing.Point(152, 390);
+            this.WidthBox.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
+            this.WidthBox.Maximum = new decimal(new int[] {
+            1000000,
+            0,
+            0,
+            0});
+            this.WidthBox.Name = "WidthBox";
+            this.WidthBox.Size = new System.Drawing.Size(63, 22);
+            this.WidthBox.TabIndex = 18;
+            // 
+            // Label_imageSize
+            // 
+            this.Label_imageSize.AutoSize = true;
+            this.Label_imageSize.Location = new System.Drawing.Point(12, 392);
+            this.Label_imageSize.Name = "Label_imageSize";
+            this.Label_imageSize.Size = new System.Drawing.Size(134, 15);
+            this.Label_imageSize.TabIndex = 19;
+            this.Label_imageSize.Text = "画像の横幅(省略可)";
+            // 
             // Form1
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 15F);
-            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.AllowDrop = true;
+            this.AutoScaleDimensions = new System.Drawing.SizeF(120F, 120F);
+            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi;
             this.ClientSize = new System.Drawing.Size(1036, 546);
+            this.Controls.Add(this.Label_imageSize);
+            this.Controls.Add(this.WidthBox);
+            this.Controls.Add(this.DistanceTypeSelecter);
+            this.Controls.Add(this.DistanceBox);
+            this.Controls.Add(this.Label_distance);
             this.Controls.Add(this.Label_log);
             this.Controls.Add(this.SaveExcelFile);
             this.Controls.Add(this.Lable_Partition);
@@ -195,11 +274,16 @@
             this.Controls.Add(this.ChosePictureBtn);
             this.Controls.Add(this.PictureBox);
             this.Controls.Add(this.ChartBox);
+            this.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.Name = "Form1";
             this.Text = "Form1";
+            this.DragDrop += new System.Windows.Forms.DragEventHandler(this.Form1_DragDrop);
+            this.DragEnter += new System.Windows.Forms.DragEventHandler(this.Form1_DragEnter);
             ((System.ComponentModel.ISupportInitialize)(this.ChartBox)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.PictureBox)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.PartitionCountBox)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.DistanceBox)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.WidthBox)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -220,6 +304,11 @@
         private System.Windows.Forms.Label Lable_Partition;
         private System.Windows.Forms.Button SaveExcelFile;
         private System.Windows.Forms.Label Label_log;
+        private System.Windows.Forms.Label Label_distance;
+        private System.Windows.Forms.NumericUpDown DistanceBox;
+        private System.Windows.Forms.ListBox DistanceTypeSelecter;
+        private System.Windows.Forms.NumericUpDown WidthBox;
+        private System.Windows.Forms.Label Label_imageSize;
     }
 }
 
