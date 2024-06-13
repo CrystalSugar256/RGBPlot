@@ -21,23 +21,24 @@ namespace RGBPlot {
         
         public Form1() {
             InitializeComponent();
-            DistanceTypeSelecter.SelectedIndex = 0;
             InitPoints();
             Log("Initilaize completed");
         }
 
         void Log(string message) => Label_log.Text = message;
 
-        Point start, end;
+        public Point start, end;
         public Bitmap bitmap, linedBitmap ;
         (Point pos, Color color)[] colorData = new (Point pos, Color color)[100];
-        double scale;
-        float ImageScale => (float)WidthBox.Value / (float)bitmap.Width;
+        public double scale, imageWidth;
+        float ImageScale => (float)imageWidth / (float)bitmap.Width;
         bool IsPointSetted(bool outputLog = true) {
                 if(start != end && bitmap != null) return true;
                 if(outputLog)Log("Import Image and Set Ponts");
                 return false;
         }
+
+        public void SetImageWidthConfirm() => ImageWidthLabel.Text = "画像横幅: " + imageWidth.ToString("f2");
 
         private void DrawChart() {
             Log("Chart Drawing Started");
@@ -81,13 +82,20 @@ namespace RGBPlot {
 
         void GetCopiedBitmap() {
             linedBitmap?.Dispose();
-            linedBitmap = new Bitmap(bitmap.Width, bitmap.Height);
-            for (int x = 0; x < bitmap.Width; x++){
-                for (int y = 0; y < bitmap.Height; y++){
-                    linedBitmap.SetPixel(x, y, bitmap.GetPixel(x, y));
+            double scale_x = (double)bitmap.Width / (double)PictureBox.Width;
+            double scale_y = (double)bitmap.Height / (double)PictureBox.Height;
+            scale = (scale_x > scale_y) ? scale_x : scale_y;
+            var bmp = new Bitmap(bitmap, (int)(bitmap.Width / scale), (int)(bitmap.Height / scale));
+            linedBitmap = new Bitmap(bmp, bmp.Width, bmp.Height);
+            for (int x = 0; x < bmp.Width; x++) {
+                for (int y = 0; y < bmp.Height; y++) {
+                    linedBitmap.SetPixel(x, y, bmp.GetPixel(x, y));
                 }
             }
+            SetScaleLabel();
         }
+
+        void SetScaleLabel() => ScaleLabel.Text = "拡大率: " + scale.ToString("f2");
 
         void SetStartPoint(Point point) {
             start = point;
@@ -112,27 +120,21 @@ namespace RGBPlot {
             for (int i = 0; i < colorData.Length; i++) {
                 var point = new Point((int)(start.X + i * stepX), (int)(start.Y + i * stepY));
                 colorData[i] = (point, bitmap.GetPixel(point.X ,point.Y));
+                point = (point.ToVector() / (float)scale).ToPoint();
                 for (int j = 0; j < 9; j++){
-                    var x = Math.Max(0, point.X + (j % 3) - 1);
-                    var y = Math.Max(0, point.Y + (j / 3) - 1);
+                    var x = Math.Min(Math.Max(0, point.X + (j % 3) - 1), linedBitmap.Width - 1);
+                    var y = Math.Min(Math.Max(0, point.Y + (j / 3) - 1), linedBitmap.Height - 1);
                     linedBitmap.SetPixel(x,y,Color.Red);
                 }
             }
             PictureBox.Image = linedBitmap;
-            if(DistanceTypeSelecter.SelectedIndex == 1) {
-                DistanceBox.Value = (int)(GetDistance() * ImageScale);
-            }
-        }
-
-        float GetDistance() {
-            return new Vector2(end.X - start.X, end.Y - start.Y).Length();
         }
 
         private void ChosePictureBtn_Click(object sender, EventArgs e) {
             Log("Openning FileDialog");
             using (OpenFileDialog openFileDialog = new OpenFileDialog()) {
                 openFileDialog.InitialDirectory = "c:\\";
-                openFileDialog.Filter = "PNG|*.png| JPEG|*.jpg*";
+                openFileDialog.Filter = "Picture|*";
                 openFileDialog.FilterIndex = 2;
                 openFileDialog.RestoreDirectory = true;
 
@@ -143,32 +145,28 @@ namespace RGBPlot {
         }
 
         void ImportImage(string filePath) {
-            bitmap?.Dispose();
-            using (var fs = new FileStream(filePath,
-                     FileMode.Open,
-                     FileAccess.Read)) {
-                var bmp = new Bitmap(fs);
-                this.filePath.Text = filePath;
-                double scale_x = (double)bmp.Width / (double)PictureBox.Width;
-                double scale_y = (double)bmp.Height / (double)PictureBox.Height;
-                scale = (scale_x > scale_y) ? scale_x : scale_y;
-                Label_Scale.Text = scale.ToString("f2") +"倍";
-                bitmap = new Bitmap(bmp, (int)(bmp.Width / scale), (int)(bmp.Height / scale));
-                bmp.Dispose();
-                fs.Dispose();
-                GetCopiedBitmap();
-                PictureBox.Image = linedBitmap;
-                InitPoints();
-                Log("Image File Opened");
+            if (filePath.EndsWith(".png") || filePath.EndsWith(".jpg") || filePath.EndsWith(".bmp")) {
+                bitmap?.Dispose();
+                using (var fs = new FileStream(filePath,
+                         FileMode.Open,
+                         FileAccess.Read)) {
+                    bitmap = new Bitmap(fs);
+                    this.filePath.Text = filePath;
+                    fs.Dispose();
+                    GetCopiedBitmap();
+                    PictureBox.Image = linedBitmap;
+                    InitPoints();
+                    Log("Image File Opened");
+                }
+            } else {
+                Log("jpg, png, bmp のみ受け付けます");
             }
         }
 
         void InitPoints() {
             SetStartPoint(default);
             SetEndPoint(default);
-            if(DistanceTypeSelecter.SelectedIndex == 1) {
-                DistanceBox.Value = 0;
-            }
+            SetImageWidthBtn.Enabled = false;
         }
 
         private void SetStartBtn_Click(object sender, EventArgs e) {
@@ -184,23 +182,26 @@ namespace RGBPlot {
         }
 
         private void PictureBox_MouseClick(object sender, MouseEventArgs e) {
-            if (bitmap is null || e.Location.X > bitmap.Width || e.Location.Y > bitmap.Height) return;
-            Debug.WriteLine(e.Location);
+            if (linedBitmap is null || e.Location.X > linedBitmap.Width || e.Location.Y > linedBitmap.Height) return;
+            var pos = (e.Location.ToVector() * (float)scale).ToPoint();
+            Debug.WriteLine(pos);
             if (!SetStartBtn.Enabled) {
-                SetStartPoint(e.Location);
+                SetStartPoint(pos);
             }
             if (!SetEndBtn.Enabled) {
-                SetEndPoint(e.Location);
+                SetEndPoint(pos);
             }
             DrawLine();
+            SetImageWidthBtn.Enabled = IsPointSetted(false);
         }
 
         private void PartitionCountBox_ValueChanged(object sender, EventArgs e) {
             int count = (int)PartitionCountBox.Value;
             if (count < 10) count = 10;
-            if (count > 500) count = 500;
+            if (count > 10000) count = 10000;
             PartitionCountBox.Value = count;
             colorData = new (Point pos, Color color)[count];
+            if (IsPointSetted(false)) DrawLine();
         }
 
         private void SaveExcelFile_Click(object sender, EventArgs e) {
@@ -208,26 +209,9 @@ namespace RGBPlot {
             SaveToExcel();
         }
 
-        private void DistanceTypeSelecter_SelectedIndexChanged(object sender, EventArgs e) {
-            if (DistanceTypeSelecter.SelectedIndex == 1) {
-                if (IsPointSetted(false)) {
-                    DrawLine();
-                } else DistanceBox.Value = 0;
-                DistanceBox.Enabled = false;
-                SetWidthBtn.Enabled = false;
-            } else {
-                DistanceBox.Enabled = true;
-                SetWidthBtn.Enabled = true;
-            }
-        }
-
         private void Form1_DragDrop(object sender, DragEventArgs e) {
             string[] files = (string[])e.Data.GetData(DataFormats.FileDrop, false);
-            if (files[0].EndsWith(".png") || files[0].EndsWith(".jpg")) {
-                ImportImage(files[0]);
-            } else {
-                Log("jpg か png のみ受け付けます");
-            }
+            ImportImage(files[0]);
         }
 
         private void Form1_DragEnter(object sender, DragEventArgs e) {
@@ -238,10 +222,12 @@ namespace RGBPlot {
             }
         }
 
-        private void SetWidthBtn_Click(object sender, EventArgs e) {
-            if (!IsPointSetted() || DistanceBox.Value <= 0) return;
-            var width =  bitmap.Width * (int)DistanceBox.Value / GetDistance();
-            WidthBox.Value = (int)width;
+        private void Form1_SizeChanged(object sender, EventArgs e) {
+
+        }
+
+        private void SetImageWidthBtn_Click(object sender, EventArgs e) {
+            new Form2(this).ShowDialog();
         }
 
         private void DrawChartBtn_Click(object sender, EventArgs e) {
